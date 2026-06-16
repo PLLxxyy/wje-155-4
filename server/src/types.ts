@@ -89,3 +89,14 @@ export interface SearchResultRoute {
   is_favorited: boolean;
   bus_positions: BusPosition[];
 }
+
+export interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  created_at: string;
+}
+
+export interface AnnouncementWithRoutes extends Announcement {
+  route_ids: number[];
+}

@@ -8,6 +8,7 @@ import type {
   User,
   BusRoute,
   RouteStation,
+  Announcement,
 } from './types';
 
 const BASE = '/api';
@@ -153,4 +154,24 @@ export async function adminAddStation(
 
 export async function adminDeleteStation(stationId: number): Promise<void> {
   await request(`/admin/stations/${stationId}`, { method: 'DELETE' });
+}
+
+// Admin Announcements
+export async function adminGetAnnouncements(): Promise<Announcement[]> {
+  return request<Announcement[]>('/admin/announcements');
+}
+
+export async function adminCreateAnnouncement(data: {
+  title: string;
+  content: string;
+  route_ids: number[];
+}): Promise<Announcement> {
+  return request<Announcement>('/admin/announcements', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function adminDeleteAnnouncement(id: number): Promise<void> {
+  await request(`/admin/announcements/${id}`, { method: 'DELETE' });
 }

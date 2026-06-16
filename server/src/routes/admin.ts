@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { db } from '../db';
 import { authMiddleware, adminMiddleware } from '../middleware/auth';
-import { AuthRequest, BusRoute, Station, RouteStationWithStation } from '../types';
+import { AuthRequest, BusRoute, Station, RouteStationWithStation, Announcement, AnnouncementWithRoutes } from '../types';
 
 const router = Router();
 
@@ -208,6 +208,81 @@ router.delete('/stations/:id', (req: AuthRequest, res: Response): void => {
     res.json({ message: '站点已删除' });
   } catch (err) {
     res.status(500).json({ error: '删除站点失败' });
+  }
+});
+
+// GET /api/admin/announcements
+router.get('/announcements', (_req: AuthRequest, res: Response): void => {
+  try {
+    const announcements = db.prepare('SELECT * FROM announcements ORDER BY created_at DESC').all() as Announcement[];
+    const result: AnnouncementWithRoutes[] = announcements.map(a => {
+      const routes = db.prepare('SELECT route_id FROM announcement_routes WHERE announcement_id = ?').all(a.id) as { route_id: number }[];
+      return {
+        ...a,
+        route_ids: routes.map(r => r.route_id),
+      };
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: '获取公告列表失败' });
+  }
+});
+
+// POST /api/admin/announcements
+router.post('/announcements', (req: AuthRequest, res: Response): void => {
+  try {
+    const { title, content, route_ids } = req.body;
+    if (!title || !content) {
+      res.status(400).json({ error: '请填写标题和正文' });
+      return;
+    }
+    if (!Array.isArray(route_ids) || route_ids.length === 0) {
+      res.status(400).json({ error: '请选择至少一条关联线路' });
+      return;
+    }
+
+    const insertAnnouncement = db.prepare('INSERT INTO announcements (title, content) VALUES (?, ?)');
+    const insertRoute = db.prepare('INSERT INTO announcement_routes (announcement_id, route_id) VALUES (?, ?)');
+
+    const result = db.transaction(() => {
+      const annResult = insertAnnouncement.run(title, content);
+      const annId = annResult.lastInsertRowid as number;
+      for (const rid of route_ids) {
+        insertRoute.run(annId, rid);
+      }
+      return annId;
+    })();
+
+    const newAnnouncement = db.prepare('SELECT * FROM announcements WHERE id = ?').get(result) as Announcement;
+    const routes = db.prepare('SELECT route_id FROM announcement_routes WHERE announcement_id = ?').all(result) as { route_id: number }[];
+    res.status(201).json({
+      ...newAnnouncement,
+      route_ids: routes.map(r => r.route_id),
+    });
+  } catch (err) {
+    res.status(500).json({ error: '发布公告失败' });
+  }
+});
+
+// DELETE /api/admin/announcements/:id
+router.delete('/announcements/:id', (req: AuthRequest, res: Response): void => {
+  try {
+    const annId = parseInt(req.params.id);
+    if (isNaN(annId)) {
+      res.status(400).json({ error: '无效的公告ID' });
+      return;
+    }
+
+    const existing = db.prepare('SELECT id FROM announcements WHERE id = ?').get(annId);
+    if (!existing) {
+      res.status(404).json({ error: '公告不存在' });
+      return;
+    }
+
+    db.prepare('DELETE FROM announcements WHERE id = ?').run(annId);
+    res.json({ message: '公告已删除' });
+  } catch (err) {
+    res.status(500).json({ error: '删除公告失败' });
   }
 });
 

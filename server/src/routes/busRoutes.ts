@@ -127,12 +127,20 @@ router.get('/:id', (req: AuthRequest, res: Response): void => {
       ORDER BY rv.created_at DESC
     `).all(routeId);
 
+    const announcements = db.prepare(`
+      SELECT a.* FROM announcements a
+      JOIN announcement_routes ar ON a.id = ar.announcement_id
+      WHERE ar.route_id = ?
+      ORDER BY a.created_at DESC
+    `).all(routeId);
+
     res.json({
       route,
       stations,
       bus_positions: busPositions,
       is_favorited: isFavorited,
       reviews,
+      announcements,
     });
   } catch (err) {
     res.status(500).json({ error: '获取线路详情失败' });

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRouteDetail, addFavorite, removeFavorite, submitReview, deleteReview } from '../api';
 import { useAuth } from '../App';
-import type { RouteDetailData, BusPosition, Review } from '../types';
+import type { RouteDetailData, BusPosition, Review, Announcement } from '../types';
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -61,6 +61,7 @@ export default function BusDetail() {
   const [loading, setLoading] = useState(true);
   const [isFav, setIsFav] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [waitRating, setWaitRating] = useState(0);
   const [crowdRating, setCrowdRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -77,6 +78,7 @@ export default function BusDetail() {
         setData(d);
         setIsFav(d.is_favorited);
         setReviews(d.reviews);
+        setAnnouncements(d.announcements || []);
       })
       .catch(() => setError('加载线路详情失败'))
       .finally(() => setLoading(false));
@@ -202,6 +204,38 @@ export default function BusDetail() {
           </div>
         </div>
       </div>
+
+      {announcements.length > 0 && (
+        <div className="card">
+          <div className="card-title">
+            📢 线路公告
+            <span className="badge badge-danger" style={{ marginLeft: 8, fontSize: 12 }}>
+              {announcements.length} 条
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {announcements.map(ann => (
+              <div
+                key={ann.id}
+                style={{
+                  padding: 12,
+                  background: 'var(--warning-light)',
+                  border: '1px solid var(--warning)',
+                  borderRadius: 8,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <strong style={{ fontSize: 14, color: 'var(--warning-dark)' }}>{ann.title}</strong>
+                  <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{ann.created_at}</span>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--gray-700)', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                  {ann.content}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div className="card-title">站点列表</div>

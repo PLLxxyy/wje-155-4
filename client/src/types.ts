@@ -62,14 +62,6 @@ export interface SearchResultRoute {
   bus_positions: BusPosition[];
 }
 
-export interface RouteDetailData {
-  route: BusRoute;
-  stations: RouteStation[];
-  bus_positions: BusPosition[];
-  is_favorited: boolean;
-  reviews: Review[];
-}
-
 export interface FavoriteRouteData {
   route: BusRoute;
   stations: RouteStation[];
@@ -85,4 +77,21 @@ export interface SearchHistoryItem {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  created_at: string;
+  route_ids?: number[];
+}
+
+export interface RouteDetailData {
+  route: BusRoute;
+  stations: RouteStation[];
+  bus_positions: BusPosition[];
+  is_favorited: boolean;
+  reviews: Review[];
+  announcements: Announcement[];
 }

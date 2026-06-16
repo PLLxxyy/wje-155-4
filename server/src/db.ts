@@ -78,6 +78,22 @@ function initDatabase(): void {
       created_at TEXT DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS announcements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now', 'localtime'))
+    );
+
+    CREATE TABLE IF NOT EXISTS announcement_routes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      announcement_id INTEGER NOT NULL,
+      route_id INTEGER NOT NULL,
+      FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+      FOREIGN KEY (route_id) REFERENCES bus_routes(id) ON DELETE CASCADE,
+      UNIQUE(announcement_id, route_id)
+    );
   `);
 
   // Seed data
